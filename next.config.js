@@ -1,6 +1,21 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
+  experimental: {
+    scrollRestoration: true,
+  },
   reactStrictMode: true,
-}
-
-module.exports = nextConfig
+  async redirects() {
+    return [
+      {
+        source: "/l/:path*",
+        destination: "/search/:path*",
+        permanent: true,
+      },
+    ];
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback.fs = false;
+    }
+    return config;
+  },
+};
