@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./wallet-adapter.css";
+@import "./slick.min.css";
+@import "./slick.theme.min.css";
+
+h1 {
+  font-family: source-code-pro, monospace;
+  font-weight: bold;
+}
+
+h2 {
+  font-family: "Noto Sans", sans-serif;
+  font-weight: bold;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  font-family: source-code-pro, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.loaded {
+  opacity: 1 !important;
+  transition: opacity 3s !important;
+}
+
+.unloaded {
+  opacity: 0 !important;
+  transition: opacity 3s !important;
+  z-index: -1;
+}
+
+.lds-dual-ring {
+  display: inline;
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-top: 0;
+  padding: 0;
+}
+
+.lds-dual-ring:after {
+  content: " ";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
