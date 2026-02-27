@@ -26,7 +26,7 @@ export default function Username() {
   return (
     <>
       <Navbar />
-      <div className="max-w-5xl mx-auto mt-32">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 mt-32">
         <section>
           {notFound && <p>Username not found :(</p>}
           {publicKey && <Gallery address={publicKey} />}
