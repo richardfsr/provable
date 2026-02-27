@@ -1,63 +1,85 @@
-import { useState, useEffect, useContext, useCallback, useRef } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import UserContext from "@/contexts/user";
 import { ToastContainer } from "react-toastify";
 import { getAssetsByOwner } from "@/utils/getAssetsByOwner";
 import Navbar from "@/components/navbar";
 import Loader from "@/components/loader";
-import Sortable from "@/components/profile/sortable";
+import Builder from "@/components/profile/builder/Builder";
 import apiClient from "@/utils/client/apiClient";
 import { toast } from "react-toastify";
 
 export default function Profile() {
   const [user] = useContext(UserContext);
-  const [tokens, setTokens] = useState([]);
+  const [nfts, setNfts] = useState([]);
+  const [initialRows, setInitialRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const childRef = useRef(null);
 
-  const fetchTokens = useCallback(async (user) => {
-    const assets = await getAssetsByOwner(user.publicKey);
-    setTokens(assets);
-    setLoading(false);
+  const fetchData = useCallback(async (user) => {
+    try {
+      // Fetch all NFTs
+      const assets = await getAssetsByOwner(user.publicKey);
+      setNfts(assets);
+
+      // Fetch existing gallery rows
+      const res = await apiClient.post("/getGalleryMintlist", { address: user.publicKey });
+      if (res.status === 200 && res.data.galleryRows) {
+        setInitialRows(res.data.galleryRows);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      toast.error("Failed to load gallery");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    if (user) fetchTokens(user);
-  }, [user]);
+    if (user) fetchData(user);
+  }, [user, fetchData]);
 
-  const updateMintlist = async () => {
-    const sortel = childRef.current;
-    const mintlist = sortel.gallery[0].map((i) => i.id);
-    const res = await apiClient.post("/saveMintlist", { apiKey: user.apiKey, mints: mintlist })
-
-    if (res.status === 200) {
-      toast.success("Gallery saved");
-    } else if (res.status === 400) {
-      toast.error(res.data.error);
+  const saveGallery = useCallback(async (galleryRows) => {
+    if (!user?.apiKey) {
+      console.error('No user or apiKey available');
+      return Promise.reject();
     }
-  };
+    
+    try {
+      console.log('Saving gallery rows:', galleryRows);
+      
+      const res = await apiClient.post("/saveGalleryRows", {
+        apiKey: user.apiKey,
+        galleryRows: galleryRows
+      });
+
+      if (res.status === 200) {
+        // Don't show toast on every auto-save to avoid spam
+        return Promise.resolve();
+      } else {
+        toast.error(res.data?.error || "Failed to save gallery");
+        return Promise.reject();
+      }
+    } catch (err) {
+      console.error("Error saving gallery:", err);
+      toast.error("Failed to save gallery");
+      return Promise.reject();
+    }
+  }, [user]);
 
   return (
     <>
       <Navbar />
       <ToastContainer position="top-center" theme="dark" />
-      <div className="max-w-5xl mx-auto mt-32">
-        <div className="mb-8 p-2 bg-neutral-200 flex gap-2">
-          <button
-            className="py-2 px-4 bg-black text-white cursor-pointer hover:bg-gray-800 font-bold"
-            onClick={() => updateMintlist()}
-          >
-            Save
-          </button>
+      {loading ? (
+        <div className="flex items-center justify-center h-screen">
+          <Loader text="Loading Art" />
         </div>
-
-        {loading ? (
-          <div className="text-center mt-1/3">
-            <Loader text="Loading Art" />
-          </div>
-        ) : (
-          <Sortable tokens={tokens} ref={childRef} />
-        )}
-      </div>
+      ) : (
+        <Builder
+          allNfts={nfts}
+          initialRows={initialRows}
+          onSave={saveGallery}
+        />
+      )}
     </>
   );
 }

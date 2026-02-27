@@ -8,7 +8,9 @@ export default async function handler(req, res) {
   const user = await User.findOne({ publicKey: address });
   if (!user) return res.status(404);
 
+  console.log('Retrieved from database:', JSON.stringify(user.galleryRows, null, 2));
+
   return res.status(200).json({
-    mints: user.mints,
+    galleryRows: user.galleryRows || [],
   });
 }
